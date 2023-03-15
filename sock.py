@@ -12,7 +12,7 @@ class Socket(ABSTRACT):
         self.port = port
         self.family = family
         self.type = socket_type
-        self.socket = socket.socket(self.type, self.type)
+        self.socket = socket.socket(self.family, self.type)
 
     def new_socket(self):
-        self.socket = socket.socket(self.type, self.type)
+        self.socket = socket.socket(self.family, self.type)

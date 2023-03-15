@@ -2,7 +2,6 @@ from sock import Socket
 
 
 class Client(Socket):
-
     def send_data(self, b_str: bytes):
 
         with self.socket as s:

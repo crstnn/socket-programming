@@ -3,6 +3,7 @@ from sock import Socket
 
 class Server(Socket):
     def open_connection(self):
+
         with self.socket as s:
             s.bind((self.host, self.port))
             s.listen()
