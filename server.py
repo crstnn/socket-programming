@@ -1,13 +1,10 @@
-import socket
-
-from host import Host
+from sock import Socket
 
 
-class Server(Host):
+class Server(Socket):
     def open_connection(self):
-
-        with socket.socket(self.family, self.type) as s:
-            s.bind((self._host, self._port))
+        with self.socket as s:
+            s.bind((self.host, self.port))
             s.listen()
             conn, addr = s.accept()
             with conn:
@@ -15,3 +12,16 @@ class Server(Host):
                 while data := conn.recv(512):
                     print(f"Received {data}")
                     conn.sendall(data)
+
+
+if __name__ == '__main__':
+    import configparser
+
+    config = configparser.ConfigParser()
+    config.read('host_configuration.ini')
+
+    host = config['SERVER']['IP']
+    port = int(config['SERVER']['listening_port'])
+
+    server = Server(host, port)
+    server.open_connection()
