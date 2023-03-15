@@ -1,3 +1,3 @@
 # socket-programming
 
-Project demonstrating TCP/IP programming using Berkeley Sockets.
+Project demonstrating socket (TCP/IP) programming using Berkeley sockets.
