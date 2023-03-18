@@ -1,28 +1,20 @@
-import socket
+from host import Host
 
 
-class Client:
-    def __init__(self, host, port, buffer_size=1024):
-        self.host = host
-        self.port = port
-        self.buffer_size = buffer_size
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+class Client(Host):
 
     def connect(self):
-        self.client_socket.connect((self.host, self.port))
+        self.socket.connect((self.host, self.port))
         print(f'Connected to server on {self.host}:{self.port}')
 
     def send_message(self, message):
         # Iterate over the message and send it in chunks of size equal to the buffer length
         for idx in range(0, len(message), self.buffer_size):
             chunk = message[idx:idx+self.buffer_size]
-            self.client_socket.sendall(chunk.encode())
+            self.socket.sendall(chunk.encode())
         # Receive the response from the server
-        response = self.client_socket.recv(self.buffer_size)
+        response = self.socket.recv(self.buffer_size)
         print(f'Received response from server: {response.decode()}')
-
-    def close(self):
-        self.client_socket.close()
 
 
 if __name__ == '__main__':

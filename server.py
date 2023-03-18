@@ -1,24 +1,22 @@
 import socket
 import selectors
+from host import Host
 
 
-class Server:
+class Server(Host):
     def __init__(self, host, port, buffer_size=1024):
-        self.host = host
-        self.port = port
-        self.buffer_size = buffer_size
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        super().__init__(host, port, buffer_size)
         self.selector = selectors.DefaultSelector()
 
     def start(self):
         # Bind the server socket to the host and port
-        self.server_socket.bind((self.host, self.port))
+        self.socket.bind((self.host, self.port))
         # Start listening for incoming connections
-        self.server_socket.listen()
+        self.socket.listen()
         print(f'Server started on {self.host}:{self.port}')
 
         # Register the server socket with the selector for read events
-        self.selector.register(self.server_socket, selectors.EVENT_READ, data=None)
+        self.selector.register(self.socket, selectors.EVENT_READ, data=None)
 
         # Start the main event loop to handle incoming connections and data
         while True:
@@ -39,6 +37,7 @@ class Server:
         self.selector.register(client_socket, selectors.EVENT_READ, data=self.handle_request)
 
     def handle_request(self, sock):
+        # TODO: handle multiple buffers
         # Receive incoming data from the socket
         data = sock.recv(self.buffer_size)
         if data:
@@ -53,8 +52,8 @@ class Server:
             sock.close()
 
     def close(self):
-        self.selector.close()
-        self.server_socket.close()
+        super().close()
+        self.socket.close()
 
 
 if __name__ == '__main__':
