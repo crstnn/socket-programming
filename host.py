@@ -16,6 +16,7 @@ class Host(ABSTRACT):
         self.min_buffer_size = 1024
         self.encoding = 'UTF-8'
         self.socket = socket.socket(self.family, self.type)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def send_message(self, sock, message: str):
         encoded_msg = self.encode(message)
