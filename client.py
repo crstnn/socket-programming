@@ -38,7 +38,7 @@ if __name__ == '__main__':
     threads = []
     for i in range(number_of_clients):
         client = Client(host, port)
-        message = f"Hello from client {i + 1}! {'test' * 6000}"
+        message = f"Hello from client {i + 1}! {'test' * 20}"
         thread = threading.Thread(target=send_messages, args=(client, message))
         threads.append(thread)
         thread.start()

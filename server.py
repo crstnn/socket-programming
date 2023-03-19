@@ -10,6 +10,7 @@ class Server(Host):
 
     def start(self):
         # Bind the server socket to the host and port
+        self.socket.setblocking(False)
         self.socket.bind((self.host, self.port))
         # Start listening for incoming connections
         self.socket.listen()
@@ -20,7 +21,7 @@ class Server(Host):
 
         # Main event loop to handle incoming connections and data
         while True:
-            events = self.selector.select()
+            events = self.selector.select(timeout=None)
             for key, event_flag in events:
                 sock = key.fileobj
                 if key.data is None:
@@ -41,11 +42,8 @@ class Server(Host):
         # Receive the length header first
         length_header = sock.recv(self.length_header_buffer_size)
         if not length_header:
-            # If no data is received, the connection is closed
-            print(f'Closing connection to {sock.getpeername()}')
-            # Unregister the socket from the selector and close the connection
-            self.selector.unregister(sock)
-            sock.close()
+            # No data is received. Close connection.
+            self.close_connection(sock)
             return
 
         length = self.message_len_from_bytes(length_header)
@@ -57,10 +55,7 @@ class Server(Host):
             chunk = sock.recv(min(length - bytes_received, self.min_buffer_size))
             if not chunk:
                 # No data is received. Close connection.
-                print(f'Closing connection to {sock.getpeername()}')
-                # Unregister the socket from the selector and close the connection
-                self.selector.unregister(sock)
-                sock.close()
+                self.close_connection(sock)
                 return
             chunks.append(chunk)
             bytes_received += len(chunk)
@@ -68,6 +63,12 @@ class Server(Host):
         message = self.decode(b''.join(chunks))
         print(f'Received data from {sock.getpeername()}: {message}')
         self.send_message(sock, message)  # Echo the incoming data back to the client
+
+    def close_connection(self, sock):
+        print(f'Closing connection to {sock.getpeername()}')
+        # Unregister the socket from the selector and close the connection
+        self.selector.unregister(sock)
+        sock.close()
 
     def close(self):
         super().close()
