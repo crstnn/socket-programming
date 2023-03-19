@@ -39,28 +39,8 @@ class Server(Host):
         self.selector.register(client_socket, selectors.EVENT_READ, data=self.handle_request)
 
     def handle_request(self, sock):
-        # Receive the length header first
-        length_header = sock.recv(self.length_header_buffer_size)
-        if not length_header:
-            # No data is received. Close connection.
-            self.close_connection(sock)
+        if (message := self.receive_message(sock)) is None:
             return
-
-        length = self.message_len_from_bytes(length_header)
-
-        chunks = []
-        bytes_received = 0
-        # Receive the incoming data from the socket
-        while bytes_received < length:
-            chunk = sock.recv(min(length - bytes_received, self.min_buffer_size))
-            if not chunk:
-                # No data is received. Close connection.
-                self.close_connection(sock)
-                return
-            chunks.append(chunk)
-            bytes_received += len(chunk)
-
-        message = self.decode(b''.join(chunks))
         print(f'Received data from {sock.getpeername()}: {message}')
         self.send_message(sock, message)  # Echo the incoming data back to the client
 

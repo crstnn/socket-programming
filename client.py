@@ -9,10 +9,7 @@ class Client(Host):
 
     def send_echo_message(self, message: str):
         self.send_message(self.socket, message)
-        # Receive the response from the server
-        response_length_header = self.socket.recv(self.length_header_buffer_size)
-        response_length = self.message_len_from_bytes(response_length_header)
-        response = self.decode(self.socket.recv(response_length))
+        response = self.receive_message(self.socket)
         print(f'Received response from server: {response}')
 
 
@@ -38,7 +35,7 @@ if __name__ == '__main__':
     threads = []
     for i in range(number_of_clients):
         client = Client(host, port)
-        message = f"Hello from client {i + 1}! {'test' * 20}"
+        message = f"Hello from client {i + 1}! {'test' * 20000} final"
         thread = threading.Thread(target=send_messages, args=(client, message))
         threads.append(thread)
         thread.start()

@@ -24,6 +24,34 @@ class Host(ABSTRACT):
         sock.sendall(length_header)
         sock.sendall(encoded_msg)
 
+    def receive_message(self, sock) -> str | None:
+        # Receive the length header first
+        length_header = sock.recv(self.length_header_buffer_size)
+        if not length_header:
+            # No data is received. Close connection.
+            self.close_connection(sock)
+            return
+
+        msg_length = self.message_len_from_bytes(length_header)
+
+        chunks = []
+        bytes_received = 0
+        # Receive the incoming (variable length) data from the socket
+        while bytes_received < msg_length:
+            chunk = sock.recv(min(msg_length - bytes_received, self.min_buffer_size))
+            if not chunk:
+                # No data is received. Close connection.
+                self.close_connection(sock)
+                return
+            chunks.append(chunk)
+            bytes_received += len(chunk)
+
+        return self.decode(b''.join(chunks))
+
+    def close_connection(self, sock):
+        print(f'Closing connection to {sock.getpeername()}')
+        sock.close()
+
     def encode(self, message: str):
         return message.encode(self.encoding)
 
