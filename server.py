@@ -4,8 +4,8 @@ from host import Host
 
 
 class Server(Host):
-    def __init__(self, host, port, buffer_size=1024):
-        super().__init__(host, port, buffer_size)
+    def __init__(self, host, port):
+        super().__init__(host, port)
         self.selector = selectors.DefaultSelector()
 
     def start(self):
@@ -21,13 +21,14 @@ class Server(Host):
         # Main event loop to handle incoming connections and data
         while True:
             events = self.selector.select()
-            for key, mask in events:
+            for key, event_flag in events:
+                sock = key.fileobj
                 if key.data is None:
                     # A new connection is being established
-                    self.accept_connection(key.fileobj)
-                elif mask & selectors.EVENT_READ:
+                    self.accept_connection(sock)
+                elif event_flag & selectors.EVENT_READ:
                     # Incoming data is available to be read
-                    self.handle_request(key.fileobj)
+                    self.handle_request(sock)
 
     def accept_connection(self, sock):
         # Accept the incoming connection
@@ -64,12 +65,12 @@ class Server(Host):
             chunks.append(chunk)
             bytes_received += len(chunk)
 
-        message = (b''.join(chunks)).decode()
+        message = self.decode(b''.join(chunks))
         print(f'Received data from {sock.getpeername()}: {message}')
         self.send_message(sock, message)  # Echo the incoming data back to the client
 
     def close(self):
-        self.socket.close()
+        super().close()
         self.selector.close()
 
 

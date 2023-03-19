@@ -12,7 +12,7 @@ class Client(Host):
         # Receive the response from the server
         response_length_header = self.socket.recv(self.length_header_buffer_size)
         response_length = self.message_len_from_bytes(response_length_header)
-        response = self.socket.recv(response_length).decode()
+        response = self.decode(self.socket.recv(response_length))
         print(f'Received response from server: {response}')
 
 
@@ -33,11 +33,12 @@ if __name__ == '__main__':
         client.send_echo_message(message)
         client.close()
 
+
     # Simulate multiple clients talking to one server
     threads = []
     for i in range(number_of_clients):
         client = Client(host, port)
-        message = f"Hello from client {i + 1}! {'test' * 200}"
+        message = f"Hello from client {i + 1}! {'test' * 6000}"
         thread = threading.Thread(target=send_messages, args=(client, message))
         threads.append(thread)
         thread.start()

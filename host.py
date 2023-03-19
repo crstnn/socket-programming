@@ -1,12 +1,9 @@
-import selectors
-
-from abc import ABC as ABSTRACT
 import socket
+from abc import ABC as ABSTRACT
 
 
 class Host(ABSTRACT):
     def __init__(self, host, port,
-                 min_buffer_size=1024,
                  family=socket.AF_INET,
                  socket_type=socket.SOCK_STREAM  # protocol: TCP (note use socket.SOCK_DGRAM for UDP)
                  ):
@@ -16,14 +13,21 @@ class Host(ABSTRACT):
         self.type = socket_type
         self.length_header_buffer_size = 4
         self.length_header_byte_order = 'big'  # big-endian
-        self.min_buffer_size = min_buffer_size
+        self.min_buffer_size = 1024
+        self.encoding = 'UTF-8'
         self.socket = socket.socket(self.family, self.type)
 
     def send_message(self, sock, message: str):
-        encoded_msg = message.encode()
+        encoded_msg = self.encode(message)
         length_header = self.message_len(encoded_msg)
         sock.sendall(length_header)
         sock.sendall(encoded_msg)
+
+    def encode(self, message: str):
+        return message.encode(self.encoding)
+
+    def decode(self, message: bytes):
+        return message.decode(self.encoding)
 
     def message_len(self, message: bytes) -> bytes:
         # Length of the message as a 4-byte big-endian integer
