@@ -47,7 +47,7 @@ class Server(Host):
             sock.close()
             return
 
-        length = self.get_message_len_from_bytes(length_header)
+        length = self.message_len_from_bytes(length_header)
 
         chunks = []
         bytes_received = 0
@@ -55,7 +55,7 @@ class Server(Host):
         while bytes_received < length:
             chunk = sock.recv(min(length - bytes_received, self.min_buffer_size))
             if not chunk:
-                # If no data is received, the connection is closed
+                # No data is received. Close connection.
                 print(f'Closing connection to {sock.getpeername()}')
                 # Unregister the socket from the selector and close the connection
                 self.selector.unregister(sock)
@@ -64,9 +64,13 @@ class Server(Host):
             chunks.append(chunk)
             bytes_received += len(chunk)
 
-        message = b''.join(chunks)
-        print(f'Received data from {sock.getpeername()}: {message.decode()}')
+        message = (b''.join(chunks)).decode()
+        print(f'Received data from {sock.getpeername()}: {message}')
         self.send_message(sock, message)  # Echo the incoming data back to the client
+
+    def close(self):
+        self.socket.close()
+        self.selector.close()
 
 
 if __name__ == '__main__':

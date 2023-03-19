@@ -8,11 +8,10 @@ class Client(Host):
         print(f'Connected to server on {self.host}:{self.port}')
 
     def send_echo_message(self, message: str):
-        message = message.encode()
         self.send_message(self.socket, message)
         # Receive the response from the server
         response_length_header = self.socket.recv(self.length_header_buffer_size)
-        response_length = self.get_message_len_from_bytes(response_length_header)
+        response_length = self.message_len_from_bytes(response_length_header)
         response = self.socket.recv(response_length).decode()
         print(f'Received response from server: {response}')
 

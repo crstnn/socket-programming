@@ -18,22 +18,19 @@ class Host(ABSTRACT):
         self.length_header_byte_order = 'big'  # big-endian
         self.min_buffer_size = min_buffer_size
         self.socket = socket.socket(self.family, self.type)
-        self.selector = selectors.DefaultSelector()
 
-    def send_message(self, sock, message: bytes):
-        length_header = self.get_message_len(message)
+    def send_message(self, sock, message: str):
+        encoded_msg = message.encode()
+        length_header = self.message_len(encoded_msg)
         sock.sendall(length_header)
-        sock.sendall(message)
+        sock.sendall(encoded_msg)
 
-    def get_message_len(self, message) -> bytes:
+    def message_len(self, message: bytes) -> bytes:
         # Length of the message as a 4-byte big-endian integer
-        return len(message).to_bytes(self.length_header_buffer_size,
-                                     byteorder=self.length_header_byte_order)
+        return len(message).to_bytes(self.length_header_buffer_size, byteorder=self.length_header_byte_order)
 
-    def get_message_len_from_bytes(self, length_header: bytes) -> int:
-        return int.from_bytes(length_header,
-                              byteorder=self.length_header_byte_order)
+    def message_len_from_bytes(self, length_header: bytes) -> int:
+        return int.from_bytes(length_header, byteorder=self.length_header_byte_order)
 
     def close(self):
         self.socket.close()
-        self.selector.close()
