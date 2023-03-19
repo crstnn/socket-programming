@@ -72,6 +72,7 @@ class Server(Host):
 
     def close(self):
         super().close()
+        self.selector.unregister(self.socket)
         self.selector.close()
 
 
