@@ -13,7 +13,7 @@ class Host(ABSTRACT):
         self.type = socket_type
         self.length_header_buffer_size = 4
         self.length_header_byte_order = 'big'  # big-endian
-        self.min_buffer_size = 1024
+        self.max_buffer_size = 1024
         self.encoding = 'UTF-8'
         self.socket = socket.socket(self.family, self.type)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -38,7 +38,7 @@ class Host(ABSTRACT):
         bytes_received = 0
         # Receive the incoming (variable length) data from the socket
         while bytes_received < msg_length:
-            chunk = sock.recv(min(msg_length - bytes_received, self.min_buffer_size))
+            chunk = sock.recv(min(msg_length - bytes_received, self.max_buffer_size))
             if not chunk:
                 # No data is received. Close connection.
                 self.close_connection(sock)
