@@ -1,5 +1,5 @@
-import socket
 import selectors
+
 from host import Host
 
 
@@ -14,11 +14,11 @@ class Server(Host):
         # Start listening for incoming connections
         self.socket.listen()
         print(f'Server started on {self.host}:{self.port}')
-
-        # Register the server socket with the selector for read events
+        # Register the server socket with the selector.
+        # Only notify the program when there is incoming data available to be read from the socket
         self.selector.register(self.socket, selectors.EVENT_READ, data=None)
 
-        # Start the main event loop to handle incoming connections and data
+        # Main event loop to handle incoming connections and data
         while True:
             events = self.selector.select()
             for key, mask in events:
@@ -37,23 +37,36 @@ class Server(Host):
         self.selector.register(client_socket, selectors.EVENT_READ, data=self.handle_request)
 
     def handle_request(self, sock):
-        # TODO: handle multiple buffers
-        # Receive incoming data from the socket
-        data = sock.recv(self.buffer_size)
-        if data:
-            print(f'Received data from {sock.getpeername()}: {data.decode()}')
-            # Echo the incoming data back to the client
-            sock.sendall(data)
-        else:
+        # Receive the length header first
+        length_header = sock.recv(self.length_header_buffer_size)
+        if not length_header:
             # If no data is received, the connection is closed
             print(f'Closing connection to {sock.getpeername()}')
             # Unregister the socket from the selector and close the connection
             self.selector.unregister(sock)
             sock.close()
+            return
 
-    def close(self):
-        super().close()
-        self.socket.close()
+        length = self.get_message_len_from_bytes(length_header)
+
+        chunks = []
+        bytes_received = 0
+        # Receive the incoming data from the socket
+        while bytes_received < length:
+            chunk = sock.recv(min(length - bytes_received, self.min_buffer_size))
+            if not chunk:
+                # If no data is received, the connection is closed
+                print(f'Closing connection to {sock.getpeername()}')
+                # Unregister the socket from the selector and close the connection
+                self.selector.unregister(sock)
+                sock.close()
+                return
+            chunks.append(chunk)
+            bytes_received += len(chunk)
+
+        message = b''.join(chunks)
+        print(f'Received data from {sock.getpeername()}: {message.decode()}')
+        self.send_message(sock, message)  # Echo the incoming data back to the client
 
 
 if __name__ == '__main__':

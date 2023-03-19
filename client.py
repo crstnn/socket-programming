@@ -7,14 +7,14 @@ class Client(Host):
         self.socket.connect((self.host, self.port))
         print(f'Connected to server on {self.host}:{self.port}')
 
-    def send_message(self, message):
-        # Iterate over the message and send it in chunks of size equal to the buffer length
-        for idx in range(0, len(message), self.buffer_size):
-            chunk = message[idx:idx+self.buffer_size]
-            self.socket.sendall(chunk.encode())
+    def send_echo_message(self, message: str):
+        message = message.encode()
+        self.send_message(self.socket, message)
         # Receive the response from the server
-        response = self.socket.recv(self.buffer_size)
-        print(f'Received response from server: {response.decode()}')
+        response_length_header = self.socket.recv(self.length_header_buffer_size)
+        response_length = self.get_message_len_from_bytes(response_length_header)
+        response = self.socket.recv(response_length).decode()
+        print(f'Received response from server: {response}')
 
 
 if __name__ == '__main__':
@@ -28,16 +28,17 @@ if __name__ == '__main__':
     port = int(client_config['port'])
     number_of_clients = int(client_config['number_of_clients'])
 
+
     def send_messages(client, message):
         client.connect()
-        client.send_message(message)
+        client.send_echo_message(message)
         client.close()
 
-
+    # Simulate multiple clients talking to one server
     threads = []
     for i in range(number_of_clients):
         client = Client(host, port)
-        message = f"Hello from client {i + 1}!"
+        message = f"Hello from client {i + 1}! {'test' * 200}"
         thread = threading.Thread(target=send_messages, args=(client, message))
         threads.append(thread)
         thread.start()
